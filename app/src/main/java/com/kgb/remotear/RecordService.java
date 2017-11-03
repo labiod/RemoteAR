@@ -13,6 +13,7 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 
 public class RecordService extends Service {
@@ -23,6 +24,7 @@ public class RecordService extends Service {
 
     private MediaRecorder mRecorder;
     private String mFilePath;
+    private boolean mRecording = false;
 
     public RecordService() {
     }
@@ -36,8 +38,6 @@ public class RecordService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        mFilePath = getExternalCacheDir().getAbsolutePath();
-        mFilePath += "/remote_ar.3gp";
     }
 
     @Override
@@ -58,6 +58,15 @@ public class RecordService extends Service {
 
     private void checkRemote() {
         Log.d(TAG, "checking remote server");
+        mFilePath = getExternalCacheDir().getAbsolutePath();
+        long count = new File(mFilePath).list().length;
+        mFilePath += "/remote_ar_" + count + ".3gp";
+        Log.d(TAG, "onCreate: file name: " + mFilePath);
+        if (mRecording) {
+            stopRecording();
+        } else {
+            startRecording();
+        }
     }
 
     private void startRecording() {
@@ -75,12 +84,13 @@ public class RecordService extends Service {
             Toast.makeText(RecordService.this, "Exception during record prepare, checks log for more details", Toast.LENGTH_SHORT).show();
             Log.e(TAG, "startRecording: prepare failed", e);
         }
-
+        mRecording = true;
         mRecorder.start();
     }
 
     private void stopRecording() {
         if (mRecorder != null) {
+            mRecording = false;
             mRecorder.stop();
         }
     }
